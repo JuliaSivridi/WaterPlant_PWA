@@ -5,7 +5,7 @@ export default function PlantList({ plants, onNameClick, onDayToggle }) {
     return (
       <div className="plant-list--empty">
         <span className="material-symbols-outlined empty-icon">yard</span>
-        <p>Добавьте первое растение</p>
+        <p>Add your first plant</p>
       </div>
     );
   }

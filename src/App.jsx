@@ -44,7 +44,7 @@ export default function App() {
       <header className="app-header">
         <h1 className="app-title">🌿 Watering</h1>
         <div className="menu-container">
-          <button className="icon-btn" onClick={() => setMenuOpen(v => !v)} aria-label="Меню">
+          <button className="icon-btn" onClick={() => setMenuOpen(v => !v)} aria-label="Menu">
             <span className="material-symbols-outlined">more_vert</span>
           </button>
           {menuOpen && (
@@ -53,11 +53,11 @@ export default function App() {
               <div className="menu">
                 <button className="menu-item" onClick={() => { exportData(plants); setMenuOpen(false); }}>
                   <span className="material-symbols-outlined">download</span>
-                  Экспорт данных
+                  Export data
                 </button>
                 <button className="menu-item" onClick={() => fileInputRef.current.click()}>
                   <span className="material-symbols-outlined">upload</span>
-                  Импорт данных
+                  Import data
                 </button>
               </div>
             </>
@@ -73,7 +73,7 @@ export default function App() {
         />
       </main>
 
-      <button className="fab" onClick={() => setModalPlant(null)} aria-label="Добавить растение">
+      <button className="fab" onClick={() => setModalPlant(null)} aria-label="Add plant">
         <span className="material-symbols-outlined">add</span>
       </button>
 

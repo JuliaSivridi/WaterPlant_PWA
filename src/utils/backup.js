@@ -15,16 +15,16 @@ export function importData(file) {
     reader.onload = (e) => {
       try {
         const data = JSON.parse(e.target.result);
-        if (!Array.isArray(data)) throw new Error('Неверный формат файла');
+        if (!Array.isArray(data)) throw new Error('Invalid file format');
         for (const plant of data) {
-          if (!plant.id || !plant.name) throw new Error('Неверный формат данных растения');
+          if (!plant.id || !plant.name) throw new Error('Invalid plant data');
         }
         resolve(data);
       } catch (err) {
         reject(err);
       }
     };
-    reader.onerror = () => reject(new Error('Ошибка чтения файла'));
+    reader.onerror = () => reject(new Error('Failed to read file'));
     reader.readAsText(file);
   });
 }

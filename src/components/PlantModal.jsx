@@ -18,8 +18,8 @@ export default function PlantModal({ plant, onSave, onDelete, onClose }) {
 
   function validate() {
     const e = {};
-    if (!name.trim()) e.name = 'Введите название';
-    if (!freqValue || freqValue < 1 || freqValue > 365) e.freqValue = 'От 1 до 365';
+    if (!name.trim()) e.name = 'Enter a name';
+    if (!freqValue || freqValue < 1 || freqValue > 365) e.freqValue = '1 to 365';
     return e;
   }
 
@@ -37,11 +37,11 @@ export default function PlantModal({ plant, onSave, onDelete, onClose }) {
     return (
       <div className="modal-backdrop" onClick={handleBackdrop}>
         <div className="modal">
-          <h2 className="modal-title">Удалить растение?</h2>
-          <p className="modal-text">«{plant.name}» будет удалено без возможности восстановления.</p>
+          <h2 className="modal-title">Delete plant?</h2>
+          <p className="modal-text">"{plant.name}" will be permanently deleted.</p>
           <div className="modal-actions">
-            <button className="btn btn--text" onClick={() => setConfirmDelete(false)}>Отмена</button>
-            <button className="btn btn--danger" onClick={onDelete}>Удалить</button>
+            <button className="btn btn--text" onClick={() => setConfirmDelete(false)}>Cancel</button>
+            <button className="btn btn--danger" onClick={onDelete}>Delete</button>
           </div>
         </div>
       </div>
@@ -51,22 +51,22 @@ export default function PlantModal({ plant, onSave, onDelete, onClose }) {
   return (
     <div className="modal-backdrop" onClick={handleBackdrop}>
       <div className="modal">
-        <h2 className="modal-title">{isEdit ? 'Редактировать' : 'Новое растение'}</h2>
+        <h2 className="modal-title">{isEdit ? 'Edit plant' : 'New plant'}</h2>
 
         <div className="form-field">
-          <label className="form-label">Название</label>
+          <label className="form-label">Name</label>
           <input
             className={`form-input${errors.name ? ' form-input--error' : ''}`}
             value={name}
             onChange={e => { setName(e.target.value); setErrors(p => ({ ...p, name: '' })); }}
-            placeholder="Например: Фикус"
+            placeholder="e.g. Ficus"
             autoFocus
           />
           {errors.name && <span className="form-error">{errors.name}</span>}
         </div>
 
         <div className="form-field">
-          <label className="form-label">Периодичность полива</label>
+          <label className="form-label">Watering frequency</label>
           <div className="freq-row">
             <input
               className={`form-input freq-input${errors.freqValue ? ' form-input--error' : ''}`}
@@ -80,11 +80,11 @@ export default function PlantModal({ plant, onSave, onDelete, onClose }) {
               <button
                 className={`freq-unit-btn${freqUnit === 'days' ? ' freq-unit-btn--active' : ''}`}
                 onClick={() => setFreqUnit('days')}
-              >дни</button>
+              >days</button>
               <button
                 className={`freq-unit-btn${freqUnit === 'weeks' ? ' freq-unit-btn--active' : ''}`}
                 onClick={() => setFreqUnit('weeks')}
-              >недели</button>
+              >weeks</button>
             </div>
           </div>
           {errors.freqValue && <span className="form-error">{errors.freqValue}</span>}
@@ -93,12 +93,12 @@ export default function PlantModal({ plant, onSave, onDelete, onClose }) {
         <div className="modal-actions">
           {isEdit && (
             <button className="btn btn--text btn--danger-text" onClick={() => setConfirmDelete(true)}>
-              Удалить
+              Delete
             </button>
           )}
           <div className="modal-actions-right">
-            <button className="btn btn--text" onClick={onClose}>Отмена</button>
-            <button className="btn btn--filled" onClick={handleSave}>Сохранить</button>
+            <button className="btn btn--text" onClick={onClose}>Cancel</button>
+            <button className="btn btn--filled" onClick={handleSave}>Save</button>
           </div>
         </div>
       </div>
