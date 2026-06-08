@@ -15,12 +15,12 @@
 ## Workflow
 
 ### Процесс разработки
-1. **Спецификация** → docs/PRD.md (требования, экраны, логика)
-2. **Архитектура** → docs/Architecture.md (структура файлов, компоненты, хуки)
-3. **Задачи** → docs/TASKS.md (разбивка на этапы)
+1. **Спецификация** → _docs/PRD.md (требования, экраны, логика)
+2. **Архитектура** → _docs/Architecture.md (структура файлов, компоненты, хуки)
+3. **Задачи** → _docs/TASKS.md (разбивка на этапы)
 4. **Реализация** → по задачам, поэтапно
 5. **UI-ревью** → проверка на мобильном
-6. **Документация** → docs/WORK_LOG.md
+6. **Документация** → _docs/WORK_LOG.md
 
 ### Правила
 - Каждый этап согласовывается перед следующим
@@ -42,9 +42,7 @@ localStorage key: "watering_plants"
 
 ## Деплой
 ```bash
-npm run build        # собрать в /dist
-# содержимое /dist → ветка gh-pages
-# или через GitHub Actions
+npm run build        # собрать в /docs (GitHub Pages: main / /docs)
 ```
 
 ## Файловая структура (целевая)
@@ -65,7 +63,7 @@ watering-app/
 │   │   └── wateringLogic.js
 │   ├── App.jsx
 │   └── main.jsx
-├── docs/
+├── _docs/
 │   ├── ARCHITECTURE.md
 │   ├── PRD.md
 │   ├── TASKS.md
