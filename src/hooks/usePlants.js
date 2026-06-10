@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { toLocalISODate } from '../utils/wateringLogic';
 
 const STORAGE_KEY = 'waterplant-plants';
 
@@ -26,7 +27,7 @@ export default function usePlants() {
       frequencyValue: Number(frequencyValue),
       frequencyUnit,
       wateredDates: [],
-      createdAt: new Date().toISOString().slice(0, 10),
+      createdAt: toLocalISODate(new Date()),
     }]);
   }
 
@@ -51,9 +52,27 @@ export default function usePlants() {
     }));
   }
 
-  function replacePlants(data) {
-    setPlants(data);
+  // Merge imported backup into current data (plants already carry uuid ids):
+  // matching ids are updated with watering histories united, new ones added,
+  // local-only plants are kept. Nothing is silently lost.
+  function mergePlants(imported) {
+    setPlants(prev => {
+      const byId = new Map(prev.map(p => [p.id, p]));
+      for (const imp of imported) {
+        const cur = byId.get(imp.id);
+        if (cur) {
+          byId.set(imp.id, {
+            ...cur,
+            ...imp,
+            wateredDates: [...new Set([...(cur.wateredDates ?? []), ...(imp.wateredDates ?? [])])].sort(),
+          });
+        } else {
+          byId.set(imp.id, imp);
+        }
+      }
+      return [...byId.values()];
+    });
   }
 
-  return { plants, addPlant, updatePlant, deletePlant, toggleWatered, replacePlants };
+  return { plants, addPlant, updatePlant, deletePlant, toggleWatered, mergePlants };
 }

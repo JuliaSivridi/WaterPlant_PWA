@@ -1,3 +1,13 @@
+// Format a Date as YYYY-MM-DD in the device's local timezone.
+// toISOString() would give the UTC date, which in Finland (UTC+2/+3) points
+// to "yesterday" until 2-3 a.m. local time.
+export function toLocalISODate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 export function getFrequencyDays(frequencyValue, frequencyUnit) {
   return frequencyUnit === 'weeks' ? frequencyValue * 7 : frequencyValue;
 }
@@ -11,9 +21,9 @@ export function getNextWatering(plant) {
   const last = getLastWatered(plant.wateredDates);
   if (!last) return null;
   const days = getFrequencyDays(plant.frequencyValue, plant.frequencyUnit);
-  const date = new Date(last);
-  date.setDate(date.getDate() + days);
-  return date.toISOString().slice(0, 10);
+  const [y, m, d] = last.split('-').map(Number);
+  const date = new Date(y, m - 1, d + days); // local-time arithmetic, no UTC parsing
+  return toLocalISODate(date);
 }
 
 export function getDayStatus(plant, dateStr) {
@@ -30,7 +40,7 @@ export function getLast7Days() {
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    days.push(d.toISOString().slice(0, 10));
+    days.push(toLocalISODate(d));
   }
   return days;
 }

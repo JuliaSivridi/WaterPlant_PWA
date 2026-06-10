@@ -6,7 +6,7 @@ import { exportData, importData } from './utils/backup';
 import './App.css';
 
 export default function App() {
-  const { plants, addPlant, updatePlant, deletePlant, toggleWatered, replacePlants } = usePlants();
+  const { plants, addPlant, updatePlant, deletePlant, toggleWatered, mergePlants } = usePlants();
   const [modalPlant, setModalPlant] = useState(undefined); // undefined=closed, null=new, plant=edit
   const [menuOpen, setMenuOpen] = useState(false);
   const [importError, setImportError] = useState('');
@@ -31,7 +31,7 @@ export default function App() {
     if (!file) return;
     try {
       const data = await importData(file);
-      replacePlants(data);
+      mergePlants(data);
       setMenuOpen(false);
     } catch (err) {
       setImportError(err.message);
