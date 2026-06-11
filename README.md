@@ -35,7 +35,7 @@ A lightweight **Progressive Web App** for tracking your plant watering schedule.
 | 🗄️ Storage | localStorage (JSON array) |
 | 💾 Backup | JSON export / import |
 | 🔔 Service Worker | Workbox (auto-generated via vite-plugin-pwa) |
-| 🚀 Hosting | GitHub Pages (main branch → /docs folder) |
+| 🚀 Hosting | GitHub Pages (auto-deploy via GitHub Actions on push to `main`) |
 
 ---
 
@@ -65,14 +65,9 @@ npm run dev       # http://localhost:5173/WaterPlant_PWA/
 
 ### Deploy
 
-```bash
-npm run build     # builds to /docs
-git add docs/
-git commit -m "deploy"
-git push
-```
-
-GitHub Pages serves from `main` → `/docs`.
+Every push to `main` triggers `.github/workflows/deploy.yml`: the app is built
+to `dist/` and published via GitHub Actions (Pages source: **GitHub Actions**).
+Nothing build-related is committed to the repository.
 
 ---
 
