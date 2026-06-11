@@ -78,3 +78,12 @@ Nothing build-related is committed to the repository.
 **iOS:** Safari → Share button → *Add to Home Screen*
 
 **Desktop:** address bar → install icon (Chrome / Edge)
+
+---
+
+## Documentation
+
+- **Product requirements:** [`docs/PRD.md`](docs/PRD.md)
+- **Architecture:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- **Technical specification:** [`docs/tech-spec.md`](docs/tech-spec.md)
+
