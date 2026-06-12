@@ -14,8 +14,8 @@ Plant Watering Tracker is a single-page Progressive Web App for tracking per-pla
 
 - **No backend, no account.** All data lives in `localStorage` under the key `waterplant-plants`. The key is namespaced to avoid collisions with other apps hosted on the same `juliasivridi.github.io` origin.
 - **No router.** The entire app is a single view. Modal state is managed by a single `modalPlant` variable in `App.jsx` (`undefined` = closed, `null` = create mode, plant object = edit mode).
-- **No date library.** All date arithmetic uses native `Date` and `toISOString().slice(0,10)` to produce `YYYY-MM-DD` strings, which sort and compare correctly as plain strings.
-- **Build output to `/docs`.** GitHub Pages requires either `/` or `/docs` as the source folder; `docs/` is used so that `_docs/` (dev documentation) is not served.
+- **No date library.** All date arithmetic uses native `Date`. A `toLocalISODate(d)` helper formats dates in the device's local timezone (via `getFullYear/getMonth/getDate` + `padStart`), producing `YYYY-MM-DD` strings that sort and compare correctly as plain strings without UTC-offset shifting.
+- **CI/CD deploy.** Every push to `main` triggers a GitHub Actions workflow that builds to `dist/` and publishes via the official `actions/deploy-pages`. The build output is gitignored and never committed. GitHub Pages source is set to **GitHub Actions**.
 - **PWA icons are square** (green `#4CAF50` fill), not circular, so they render without white corners on Android home screen.
 
 ---
@@ -26,7 +26,7 @@ Plant Watering Tracker is a single-page Progressive Web App for tracking per-pla
 |---|---|---|---|
 | UI framework | react | ^19.2.6 | Functional components + hooks only |
 | DOM renderer | react-dom | ^19.2.6 | |
-| Build tool | vite | ^8.0.12 | base `/WaterPlant_PWA/`, outDir `docs` |
+| Build tool | vite | ^8.0.12 | base `/WaterPlant_PWA/`, outDir `dist` (default) |
 | React Vite plugin | @vitejs/plugin-react | ^6.0.1 | Babel-based Fast Refresh |
 | PWA | vite-plugin-pwa | ^1.3.0 | Workbox generateSW mode, autoUpdate |
 | UUID | uuid | ^14.0.0 | `v4` for plant IDs |
@@ -44,7 +44,7 @@ Plant Watering Tracker is a single-page Progressive Web App for tracking per-pla
 localStorage ("waterplant-plants")
         ↕  read on init / write on every state change
   usePlants (hook)
-        ↓  plants[], addPlant, updatePlant, deletePlant, toggleWatered, replacePlants
+        ↓  plants[], addPlant, updatePlant, deletePlant, toggleWatered, mergePlants
   App.jsx  ─────────────────────────────────────────────────────────────
     │  plants + onNameClick + onDayToggle
     ├── PlantList
@@ -111,8 +111,8 @@ WaterPlant-PWA/
 │       ├── wateringLogic.js Pure functions: status calc, date helpers
 │       └── backup.js        exportData (download JSON) / importData (FileReader)
 │
-├── docs/                    Build output (served by GitHub Pages main/docs)
-├── _docs/                   Developer documentation (not served)
+├── docs/                    Developer documentation (not served by Pages)
+├── dist/                    Build output — gitignored, never committed
 ├── index.html               HTML entry — lang=en, Google Fonts, favicon
 ├── vite.config.js           Vite + PWA plugin config
 ├── package.json
@@ -134,7 +134,7 @@ Stored as elements of the `Plant[]` array in localStorage.
 | `frequencyValue` | `number` | — | Interval value; coerced with `Number()` on save |
 | `frequencyUnit` | `'days'` \| `'weeks'` | — | Multiplier unit |
 | `wateredDates` | `string[]` | `[]` | Array of `YYYY-MM-DD` ISO date strings |
-| `createdAt` | `string` | `new Date().toISOString().slice(0,10)` | Creation date, `YYYY-MM-DD` |
+| `createdAt` | `string` | `toLocalISODate(new Date())` | Creation date, `YYYY-MM-DD`, in local timezone |
 
 **Invariants:**
 - `frequencyValue` is validated as `>= 1` and `<= 365` in the modal before save.
@@ -182,10 +182,17 @@ No authentication. No server. Backup is the only way to transfer data between de
 2. Hidden `<input type="file" accept=".json">` programmatically clicked via `fileInputRef.current.click()`
 3. `FileReader.readAsText(file)` reads the file
 4. On load: JSON.parse → array check → each element `.id`/`.name` check
-5. On success: `replacePlants(data)` calls `setPlants(data)` — fully replaces current plant list
+5. On success: `mergePlants(data)` — merges imported plants into the current list (see merge algorithm below)
 6. On error: `importError` state set → red toast rendered
-7. **No confirmation dialog before overwrite** (replaces immediately on valid file)
-8. `e.target.value = ''` reset allows re-importing the same file
+7. `e.target.value = ''` reset allows re-importing the same file
+
+**Merge algorithm (`mergePlants`):**
+- Builds a `Map<id, plant>` from the current list
+- For each imported plant:
+  - If `id` already exists: deep-merges fields; `wateredDates` is unioned via `new Set([...current, ...imported]).sort()`
+  - If `id` is new: adds plant to the map as-is
+- Result is `[...map.values()]`, preserving existing order then appending new plants
+- Local-only plants (not in the import file) are always preserved
 
 ---
 
@@ -396,6 +403,18 @@ function getDayStatus(plant, dateStr):
   return "overdue"                                       // dateStr > next
 ```
 
+### toLocalISODate
+
+```
+function toLocalISODate(d):
+  y   = d.getFullYear()
+  m   = String(d.getMonth() + 1).padStart(2, '0')
+  day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`   // YYYY-MM-DD in local timezone
+```
+
+Used everywhere a date string must reflect the user's local clock, not UTC.
+
 ### getNextWatering
 
 ```
@@ -403,9 +422,9 @@ function getNextWatering(plant):
   last = getLastWatered(plant.wateredDates)
   if last is null → return null
   days = frequencyUnit === 'weeks' ? frequencyValue * 7 : frequencyValue
-  date = new Date(last)
-  date.setDate(date.getDate() + days)
-  return date.toISOString().slice(0, 10)   // YYYY-MM-DD
+  [y, m, d] = last.split('-').map(Number)
+  date = new Date(y, m - 1, d + days)   // local-time arithmetic
+  return toLocalISODate(date)
 ```
 
 ### getLastWatered
@@ -426,11 +445,9 @@ function getLast7Days():
   for i from 6 down to 0:
     d = new Date()
     d.setDate(d.getDate() - i)
-    result.push(d.toISOString().slice(0, 10))
-  return result   // [today-6, today-5, ..., today]
+    result.push(toLocalISODate(d))
+  return result   // [today-6, today-5, ..., today], all in local timezone
 ```
-
-**Important:** `getLast7Days()` uses the local device clock with no timezone normalisation. `toISOString()` returns UTC. If the device is in a UTC-offset timezone, dates near midnight may shift by ±1 day relative to the user's local date. This is a known limitation of v1.
 
 ---
 
@@ -454,16 +471,29 @@ function getLast7Days():
 
 ## 14. Build & Deploy
 
-No CI/CD. Build and deploy are performed manually.
+Deploy is fully automated via GitHub Actions (`.github/workflows/deploy.yml`).  
+Every push to `main` (or manual `workflow_dispatch`) triggers the pipeline.
 
-```bash
-npm run build          # vite build → output to docs/
-git add docs/
-git commit -m "deploy"
-git push
+**Workflow — two jobs:**
+
+```
+build job:
+  - actions/checkout@v4
+  - actions/setup-node@v4  (Node 20, npm cache)
+  - npm ci
+  - npm run build          # vite → dist/
+  - actions/upload-pages-artifact@v3  (path: dist)
+
+deploy job (needs: build):
+  - actions/deploy-pages@v4
+  - outputs: page_url
 ```
 
-GitHub Pages is configured to serve from `main` branch, `/docs` folder.  
+**Permissions:** `contents: read`, `pages: write`, `id-token: write`  
+**Concurrency:** group `pages`, `cancel-in-progress: true`
+
+Build output (`dist/`) is gitignored — nothing build-related is ever committed.  
+GitHub Pages settings: **Source → GitHub Actions** (not "Deploy from branch").  
 Base URL: `https://juliasivridi.github.io/WaterPlant_PWA/`
 
 ---
@@ -479,12 +509,7 @@ npm run dev        # http://localhost:5173/WaterPlant_PWA/
 
 No environment variables. No API keys. No accounts required.
 
-To deploy:
-```bash
-npm run build
-git add docs/
-git commit -m "deploy"
-git push
-```
+**To deploy:** push to `main` — the GitHub Actions workflow builds and publishes automatically.
 
-GitHub Pages settings: Settings → Pages → Source: Deploy from branch → Branch: `main` → Folder: `/docs`.
+**One-time repo setup (already done):**  
+Settings → Pages → Source: **GitHub Actions**
